@@ -7,6 +7,7 @@ import java.util.List;
 public class ParkingLot {
     private List<ParkingSlot> slots;
     private int capacity;
+    private IOhandler file;
 
     public ParkingLot(int capacity) {
         this.capacity = capacity;
@@ -21,6 +22,7 @@ public class ParkingLot {
         for (ParkingSlot slot : slots) {
             if (!slot.isOccupied()) {
                 slot.assignVehicle(vehicle);
+                file.logTime(vehicle.getLicensePlate(), true);
                 return slot;
             }
         }
@@ -37,6 +39,9 @@ public class ParkingLot {
         return count;
     }
 
+    public List<ParkingSlot> getSlots(){
+        return slots;
+    }
     // Nested static class for Parking Slot
     public static class ParkingSlot {
         private int slotNumber;
@@ -60,6 +65,10 @@ public class ParkingLot {
 
         public void removeVehicle() {
             this.parkedVehicle = null;
+        }
+
+        public Vehicle getParkedVehicle(){
+            return parkedVehicle;
         }
     }
 }

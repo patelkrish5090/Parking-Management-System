@@ -1,8 +1,8 @@
 package com.smartparking;
 
 public class Truck extends Vehicle {
-    public Truck(String type, String licensePlate) {
-        super(type, licensePlate);
+    public Truck(String type, String licensePlate, boolean pass) {
+        super(type, licensePlate, pass);
     }
 
     @Override

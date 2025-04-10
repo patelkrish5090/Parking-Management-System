@@ -2,6 +2,7 @@ package com.smartparking;
 
 public class Billing {
     private double rate;
+    private final double specialRate=7;
     private int hours;
 
     // Overloaded constructors
@@ -16,20 +17,31 @@ public class Billing {
     }
 
     // Overloaded method 1: calculate bill normally
-    public double calculateBill() {
+    public double calculateBill(boolean pass) {
+        if(pass){
+            return specialRate*hours;
+        }
         return rate * hours;
     }
 
     // Overloaded method 2: calculate bill with discount
-    public double calculateBill(double discount) {
+    public double calculateBill(double discount, boolean pass) {
+        if (pass) {
+            double bill = specialRate*hours;
+            return bill-discount;
+        }
         double bill = rate * hours;
         return bill - discount;
     }
 
     // Vararg overloading method 1: calculate total bill for multiple sessions
-    public double calculateMultipleBills(double... hoursArray) {
+    public double calculateMultipleBills(boolean pass, double... hoursArray) {
         double total = 0;
         for (double h : hoursArray) {
+            if(pass){
+                total += specialRate*h;
+                continue;
+            }
             total += rate * h;
         }
         return total;

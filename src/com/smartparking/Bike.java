@@ -1,8 +1,8 @@
 package com.smartparking;
 
 public class Bike extends Vehicle {
-    public Bike(String type, String licensePlate) {
-        super(type, licensePlate);
+    public Bike(String type, String licensePlate, boolean pass) {
+        super(type, licensePlate, pass);
     }
 
     @Override

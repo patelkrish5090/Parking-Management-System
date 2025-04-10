@@ -30,13 +30,17 @@ public class Main {
                     // Park vehicle (simulate entry)
                     System.out.print("Enter vehicle type (car/bike/truck): ");
                     String type = scanner.next();
+                    System.out.println("Opt in buying pass?(y/n)");
+                    String pass = scanner.next();
+                    boolean pass_arg;
+                    pass_arg = pass.equalsIgnoreCase("y");
                     Vehicle vehicle = null;
                     if (type.equalsIgnoreCase("car")) {
-                        vehicle = new Car("Car", "ABC123");
+                        vehicle = new Car("Car", "ABC123", pass_arg);
                     } else if (type.equalsIgnoreCase("bike")) {
-                        vehicle = new Bike("Bike", "BIKE001");
+                        vehicle = new Bike("Bike", "BIKE001", pass_arg);
                     } else if (type.equalsIgnoreCase("truck")) {
-                        vehicle = new Truck("Truck", "TRK789");
+                        vehicle = new Truck("Truck", "TRK789", pass_arg);
                     } else {
                         System.out.println("Invalid vehicle type.");
                         break;
@@ -60,16 +64,29 @@ public class Main {
                     System.out.println("Available slots: " + parkingLot.getAvailableSlots());
                     break;
                 case 4:
-                    System.out.println("Exiting system. Goodbye!");
-                    // Write exit log to file
-                    try (FileWriter fw = new FileWriter("parking_log.txt", true);
-                         BufferedWriter bw = new BufferedWriter(fw)) {
-                        bw.write("System exited at " + java.time.LocalDateTime.now() + "\n");
-                    } catch (IOException ex) {
-                        System.out.println("Error writing to log file: " + ex.getMessage());
+                    System.out.println("Enter car license plate number");
+                    String license_plate = scanner.next();
+                    Vehicle veh = null;
+                    for(ParkingLot.ParkingSlot ps: parkingLot.getSlots()){
+                        if(ps.getParkedVehicle().getLicensePlate().equals(license_plate)){
+                            veh = ps.getParkedVehicle();
+                        }
                     }
-                    scanner.close();
-                    System.exit(0);
+                    // Write exit log to file
+//                    try (FileWriter fw = new FileWriter("parking_log.txt", true);
+//                         BufferedWriter bw = new BufferedWriter(fw)) {
+//                        bw.write("System exited at " + java.time.LocalDateTime.now() + "\n");
+//                    } catch (IOException ex) {
+//                        System.out.println("Error writing to log file: " + ex.getMessage());
+//                    }
+//                    scanner.close();
+                    IOhandler exit = new IOhandler();
+                    try {
+                        exit.logTime(veh.licensePlate, false);
+                    } catch (NullPointerException e) {
+                        System.out.println("Vehicle not found");
+                    }
+                    System.out.println("Exiting system. Goodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Try again.");
