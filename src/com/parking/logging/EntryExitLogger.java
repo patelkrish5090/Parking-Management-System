@@ -1,0 +1,156 @@
+package com.parking.logging;
+
+import com.parking.users.User;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Logs and manages vehicle entry/exit events in the parking system
+ */
+public class EntryExitLogger {
+    private final Map<String, List<LogEntry>> userLogs;
+    private final List<LogEntry> systemLog;
+
+    public EntryExitLogger() {
+        this.userLogs = new HashMap<>();
+        this.systemLog = new ArrayList<>();
+    }
+
+    /**
+     * Logs a vehicle entry event
+     * @param user The user entering
+     * @param time Entry time
+     */
+    public void logEntry(User user, LocalDateTime time) {
+        LogEntry entry = new LogEntry(user.getUserId(), time, true);
+        logToSystem(entry);
+        logToUserHistory(user.getUserId(), entry);
+    }
+
+    /**
+     * Logs a vehicle exit event
+     * @param user The user exiting
+     * @param time Exit time
+     */
+    public void logExit(User user, LocalDateTime time) {
+        LogEntry entry = new LogEntry(user.getUserId(), time, false);
+        logToSystem(entry);
+        logToUserHistory(user.getUserId(), entry);
+    }
+
+    private void logToSystem(LogEntry entry) {
+        systemLog.add(entry);
+    }
+
+    private void logToUserHistory(String userId, LogEntry entry) {
+        userLogs.computeIfAbsent(userId, k -> new ArrayList<>()).add(entry);
+    }
+
+    /**
+     * Gets all logs for a specific user
+     * @param userId User ID to query
+     * @return List of log entries in chronological order
+     */
+    public List<String> getLogsByUser(String userId) {
+        List<String> result = new ArrayList<>();
+        if (userLogs.containsKey(userId)) {
+            for (LogEntry entry : userLogs.get(userId)) {
+                result.add(entry.toString());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Gets the last entry log for a user
+     * @param userId User ID to check
+     * @return Last entry log or null if never entered
+     */
+    public LocalDateTime getLastEntryTime(String userId) {
+        return userLogs.getOrDefault(userId, List.of()).stream()
+                .filter(LogEntry::isEntry)
+                .map(LogEntry::getTime)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+    }
+
+    /**
+     * Checks if a user is currently in the parking lot
+     * @param userId User ID to check
+     * @return true if user entered but hasn't exited
+     */
+    public boolean isUserInParking(String userId) {
+        if (!userLogs.containsKey(userId)) {
+            return false;
+        }
+
+        List<LogEntry> entries = userLogs.get(userId);
+        int entryCount = 0;
+        int exitCount = 0;
+
+        for (LogEntry entry : entries) {
+            if (entry.isEntry()) entryCount++;
+            else exitCount++;
+        }
+
+        return entryCount > exitCount;
+    }
+
+    /**
+     * Generates a daily activity report
+     * @param date Date to report on
+     * @return Formatted report string
+     */
+    public String generateDailyReport(LocalDateTime date) {
+        long entries = systemLog.stream()
+                .filter(e -> e.getTime().toLocalDate().equals(date.toLocalDate()))
+                .filter(LogEntry::isEntry)
+                .count();
+
+        long exits = systemLog.stream()
+                .filter(e -> e.getTime().toLocalDate().equals(date.toLocalDate()))
+                .filter(e -> !e.isEntry())
+                .count();
+
+        return String.format(
+                "Daily Parking Report for %s\n" +
+                        "Total Entries: %d\n" +
+                        "Total Exits: %d\n" +
+                        "Current Occupancy: %d",
+                date.toLocalDate(),
+                entries,
+                exits,
+                entries - exits
+        );
+    }
+
+    /**
+     * Inner class representing a single log entry
+     */
+    private static class LogEntry {
+        private final String userId;
+        private final LocalDateTime time;
+        private final boolean isEntry;
+
+        public LogEntry(String userId, LocalDateTime time, boolean isEntry) {
+            this.userId = userId;
+            this.time = time;
+            this.isEntry = isEntry;
+        }
+
+        public String getUserId() { return userId; }
+        public LocalDateTime getTime() { return time; }
+        public boolean isEntry() { return isEntry; }
+
+        @Override
+        public String toString() {
+            return String.format("%s - %s: %s",
+                    time.toString(),
+                    isEntry ? "ENTRY" : "EXIT",
+                    userId);
+        }
+    }
+}
