@@ -67,9 +67,9 @@ public class Reservation {
     }
 
     public void setCheckOut(LocalDateTime checkOut) {
+        if (checkOut.isBefore(checkIn)) {
+            throw new IllegalArgumentException("Check-out time cannot be before check-in");
+        }
         this.checkOut = checkOut;
-        // Update slot statistics
-        long hours = calculateParkingDuration();
-        slot.getStatistics().addUsage((int) hours);
     }
 }
