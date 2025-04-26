@@ -2,17 +2,9 @@ package com.parking.core;
 
 import com.parking.users.User;
 import com.parking.vehicles.Vehicle;
-import com.parking.vehicles.VehicleType;
-import com.parking.exception.NoAvailableSlotException;
-import com.parking.util.SlotCodeGenerator;
-import com.parking.util.Constants;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class Reservation {
     private final String reservationId;
@@ -30,10 +22,6 @@ public class Reservation {
         this.checkIn = checkIn;
     }
 
-    /**
-     * Calculates duration of parking in hours
-     * @return Number of hours parked
-     */
     public long calculateParkingDuration() {
         if (checkOut == null) {
             return 0;
@@ -41,7 +29,6 @@ public class Reservation {
         return java.time.Duration.between(checkIn, checkOut).toHours();
     }
 
-    // Getters and setters
     public String getReservationId() {
         return reservationId;
     }

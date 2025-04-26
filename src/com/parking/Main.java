@@ -17,11 +17,14 @@
 //    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 //    private static final Scanner scanner = new Scanner(System.in);
 //
+//    private final Map<String, Reservation> activeReservations = new HashMap<>();
 //    private final ParkingLotManager lotManager;
 //    private final BillingSystem billingSystem;
 //    private final EntryExitLogger logger;
 //    private final Map<String, User> users;
 //    private User currentUser;
+//    private boolean testMode = false;
+//    private LocalDateTime simulatedNow = LocalDateTime.now();
 //
 //    public Main() {
 //        this.lotManager = new ParkingLotManager();
@@ -32,7 +35,6 @@
 //    }
 //
 //    private void initializeSampleData() {
-//        // Add some sample users
 //        Vehicle regularCar = new Car("REG123");
 //        User regularUser = new User(regularCar);
 //        users.put(regularCar.getLicensePlate(), regularUser);
@@ -57,6 +59,18 @@
 //            } else {
 //                showUserMenu();
 //            }
+//        }
+//    }
+//
+//    private LocalDateTime getCurrentTime() {
+//        return testMode ? simulatedNow : LocalDateTime.now();
+//    }
+//
+//    private void advanceSimulatedTime(int hours) {
+//        if (testMode) {
+//            simulatedNow = simulatedNow.plusHours(hours);
+//            System.out.println("Simulated time advanced by " + hours + " hours to: " +
+//                    simulatedNow.format(TIME_FORMAT));
 //        }
 //    }
 //
@@ -147,15 +161,52 @@
 //        System.out.println("New user registered: " + licensePlate);
 //    }
 //
+//    private LocalDateTime getSimulatedTime(String prompt) {
+//        if (!testMode) return LocalDateTime.now();
+//
+//        System.out.println(prompt);
+//        System.out.println("1. Use current time");
+//        System.out.println("2. Enter custom date/time");
+//        System.out.print("Select option: ");
+//
+//        int choice = readIntInput(1, 2);
+//        if (choice == 1) return LocalDateTime.now();
+//
+//        System.out.print("Enter date/time (yyyy-MM-dd HH:mm): ");
+//        String input = scanner.nextLine();
+//        try {
+//            return LocalDateTime.parse(input, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+//        } catch (Exception e) {
+//            System.out.println("Invalid format. Using current time.");
+//            return LocalDateTime.now();
+//        }
+//    }
+//
+//
 //    private void handleUserCheckIn() {
 //        try {
 //            ParkingSlot slot = lotManager.reserveSlot(currentUser, currentUser.getVehicle());
-//            LocalDateTime now = LocalDateTime.now();
-//            logger.logEntry(currentUser, now);
+//            LocalDateTime checkInTime = testMode ?
+//                    getSimulatedTime("\nSet check-in time:") :
+//                    LocalDateTime.now();
+//
+//            // Create reservation with the actual check-in time
+//            String reservationId = "RES-" + System.currentTimeMillis();
+//            Reservation reservation = new Reservation(
+//                    reservationId,
+//                    slot,
+//                    currentUser.getVehicle(),
+//                    currentUser,
+//                    checkInTime
+//            );
+//
+//            // Store the reservation in your system (you'll need a reservations map)
+//            activeReservations.put(currentUser.getUserId(), reservation);
+//            logger.logEntry(currentUser, checkInTime);
 //
 //            System.out.println("\nCheck-in successful!");
 //            System.out.println("Slot: " + slot.getCode());
-//            System.out.println("Time: " + now.format(TIME_FORMAT));
+//            System.out.println("Time: " + checkInTime.format(TIME_FORMAT));
 //        } catch (NoAvailableSlotException e) {
 //            System.out.println("Error: " + e.getMessage());
 //        }
@@ -180,20 +231,37 @@
 //
 //    private void handleCheckOutProcess(User user) {
 //        try {
-//            Reservation reservation = lotManager.releaseSlot(user.getVehicle().getLicensePlate());
-//            LocalDateTime now = LocalDateTime.now();
-//            logger.logExit(user, now);
+//            Reservation reservation = activeReservations.get(user.getUserId());
+//            if (reservation == null) {
+//                System.out.println("Error: No active reservation found");
+//                return;
+//            }
+//
+//            LocalDateTime checkOutTime = testMode ?
+//                    getSimulatedTime("\nSet check-out time:") :
+//                    LocalDateTime.now();
+//
+//            reservation.setCheckOut(checkOutTime);
+//            logger.logExit(user, checkOutTime);
+//
+//            // Release the slot
+//            lotManager.releaseSlot(reservation);
 //
 //            double charge = billingSystem.calculateCharge(reservation);
 //            System.out.println(billingSystem.generateBill(reservation));
 //
 //            if (charge > 0) {
 //                processPayment(user, charge);
-//            } else {
+//            } else if (user.isSubscription()) {
 //                System.out.println("No payment required - covered by subscription");
+//            } else {
+//                System.out.println("No payment required (minimum charge not reached)");
 //            }
 //
-//            System.out.println("Check-out completed at " + now.format(TIME_FORMAT));
+//            System.out.println("Check-out completed at " + checkOutTime.format(TIME_FORMAT));
+//
+//            // Remove the completed reservation
+//            activeReservations.remove(user.getUserId());
 //        } catch (Exception e) {
 //            System.out.println("Error during check-out: " + e.getMessage());
 //        }
@@ -222,7 +290,7 @@
 //        } catch (PaymentFailedException e) {
 //            System.out.println("Payment failed: " + e.getMessage());
 //            System.out.println("Please try another payment method");
-//            processPayment(user, amount); // Retry
+//            processPayment(user, amount);
 //        }
 //    }
 //
@@ -306,19 +374,39 @@
 //            System.out.println("2. View Parking Logs");
 //            System.out.println("3. View Available Slots");
 //            System.out.println("4. Generate Daily Report");
-//            System.out.println("5. Back to Main Menu");
+//            System.out.println("5. Toggle Test Mode (Current: " + (testMode ? "ON" : "OFF") + ")");
+//            System.out.println("6. Advance Simulated Time");
+//            System.out.println("7. Back to Main Menu");
 //            System.out.print("Select option: ");
 //
-//            int choice = readIntInput(1, 5);
+//            int choice = readIntInput(1, 7);
 //
 //            switch (choice) {
 //                case 1 -> showAllUsers();
 //                case 2 -> showAllLogs();
 //                case 3 -> showAvailableSlots();
 //                case 4 -> generateDailyReport();
-//                case 5 -> { return; }
+//                case 5 -> toggleTestMode();
+//                case 6 -> advanceSimulatedTime();
+//                case 7 -> { return; }
 //            }
 //        }
+//    }
+//
+//    private void toggleTestMode() {
+//        testMode = !testMode;
+//        simulatedNow = LocalDateTime.now();
+//        System.out.println("Test mode " + (testMode ? "activated" : "deactivated"));
+//    }
+//
+//    private void advanceSimulatedTime() {
+//        if (!testMode) {
+//            System.out.println("Test mode must be active to advance time");
+//            return;
+//        }
+//        System.out.print("Enter hours to advance: ");
+//        int hours = readIntInput(1, 24);
+//        advanceSimulatedTime(hours);
 //    }
 //
 //    private void showAllUsers() {
@@ -358,10 +446,9 @@
 //    }
 //
 //    private void generateDailyReport() {
-//        System.out.println("\n" + logger.generateDailyReport(LocalDateTime.now()));
+//        System.out.println("\n" + logger.generateDailyReport(getCurrentTime()));
 //    }
 //
-//    // Utility methods for input handling
 //    private int readIntInput(int min, int max) {
 //        while (true) {
 //            try {
@@ -410,11 +497,11 @@ public class Main {
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final Scanner scanner = new Scanner(System.in);
 
-    private final Map<String, Reservation> activeReservations = new HashMap<>();
+    private final List<Reservation> activeReservations = new ArrayList<>();
     private final ParkingLotManager lotManager;
     private final BillingSystem billingSystem;
     private final EntryExitLogger logger;
-    private final Map<String, User> users;
+    private final List<User> users;
     private User currentUser;
     private boolean testMode = false;
     private LocalDateTime simulatedNow = LocalDateTime.now();
@@ -423,14 +510,14 @@ public class Main {
         this.lotManager = new ParkingLotManager();
         this.billingSystem = new BillingSystem();
         this.logger = new EntryExitLogger();
-        this.users = new HashMap<>();
+        this.users = new ArrayList<>();
         initializeSampleData();
     }
 
     private void initializeSampleData() {
         Vehicle regularCar = new Car("REG123");
         User regularUser = new User(regularCar);
-        users.put(regularCar.getLicensePlate(), regularUser);
+        users.add(regularUser);
 
         Vehicle premiumCar = new Car("PREMIUM1");
         Subscription subscription = new Subscription(
@@ -440,7 +527,7 @@ public class Main {
                 Constants.DAILY_SUBSCRIPTION_HOURS
         );
         User premiumUser = new User(premiumCar, subscription);
-        users.put(premiumCar.getLicensePlate(), premiumUser);
+        users.add(premiumUser);
     }
 
     public void start() {
@@ -513,8 +600,12 @@ public class Main {
         System.out.print("Enter license plate: ");
         String licensePlate = scanner.nextLine().trim().toUpperCase();
 
-        if (users.containsKey(licensePlate)) {
-            currentUser = users.get(licensePlate);
+        Optional<User> existingUser = users.stream()
+                .filter(u -> u.getVehicle().getLicensePlate().equals(licensePlate))
+                .findFirst();
+
+        if (existingUser.isPresent()) {
+            currentUser = existingUser.get();
             System.out.println("Welcome back, " + licensePlate);
             return;
         }
@@ -526,20 +617,22 @@ public class Main {
         System.out.println("4. EV Car");
         System.out.print("Select vehicle type: ");
 
-        int typeChoice = readIntInput(1, 4);
+        int typeChoice = readIntInput(1, 5);
         VehicleType type = switch (typeChoice) {
             case 1 -> VehicleType.CAR;
             case 2 -> VehicleType.BIKE;
             case 3 -> VehicleType.TRUCK;
-            case 4 -> VehicleType.EV;
+            case 4 -> VehicleType.EVCar;
             default -> throw new IllegalStateException();
         };
 
         Vehicle vehicle;
-        if (type == VehicleType.EV) {
+        if (type == VehicleType.EVCar || type == VehicleType.EVCar) {
             System.out.print("Enter charging rate per hour: ");
             double rate = readDoubleInput();
-            vehicle = new EVCar(licensePlate, rate);
+            vehicle = type == VehicleType.EVCar ?
+                    new EVCar(licensePlate, rate) :
+                    new EVBike(licensePlate, rate);
         } else {
             vehicle = switch (type) {
                 case CAR -> new Car(licensePlate);
@@ -550,7 +643,7 @@ public class Main {
         }
 
         currentUser = new User(vehicle);
-        users.put(licensePlate, currentUser);
+        users.add(currentUser);
         System.out.println("New user registered: " + licensePlate);
     }
 
@@ -575,7 +668,6 @@ public class Main {
         }
     }
 
-
     private void handleUserCheckIn() {
         try {
             ParkingSlot slot = lotManager.reserveSlot(currentUser, currentUser.getVehicle());
@@ -583,7 +675,6 @@ public class Main {
                     getSimulatedTime("\nSet check-in time:") :
                     LocalDateTime.now();
 
-            // Create reservation with the actual check-in time
             String reservationId = "RES-" + System.currentTimeMillis();
             Reservation reservation = new Reservation(
                     reservationId,
@@ -593,8 +684,7 @@ public class Main {
                     checkInTime
             );
 
-            // Store the reservation in your system (you'll need a reservations map)
-            activeReservations.put(currentUser.getUserId(), reservation);
+            activeReservations.add(reservation);
             logger.logEntry(currentUser, checkInTime);
 
             System.out.println("\nCheck-in successful!");
@@ -609,13 +699,16 @@ public class Main {
         System.out.print("\nEnter license plate to check-out: ");
         String licensePlate = scanner.nextLine().trim().toUpperCase();
 
-        if (!users.containsKey(licensePlate)) {
+        Optional<User> user = users.stream()
+                .filter(u -> u.getVehicle().getLicensePlate().equals(licensePlate))
+                .findFirst();
+
+        if (!user.isPresent()) {
             System.out.println("Vehicle not found in system");
             return;
         }
 
-        User user = users.get(licensePlate);
-        handleCheckOutProcess(user);
+        handleCheckOutProcess(user.get());
     }
 
     private void handleUserCheckOut() {
@@ -624,12 +717,16 @@ public class Main {
 
     private void handleCheckOutProcess(User user) {
         try {
-            Reservation reservation = activeReservations.get(user.getUserId());
-            if (reservation == null) {
+            Optional<Reservation> reservationOpt = activeReservations.stream()
+                    .filter(r -> r.getUser().equals(user))
+                    .findFirst();
+
+            if (!reservationOpt.isPresent()) {
                 System.out.println("Error: No active reservation found");
                 return;
             }
 
+            Reservation reservation = reservationOpt.get();
             LocalDateTime checkOutTime = testMode ?
                     getSimulatedTime("\nSet check-out time:") :
                     LocalDateTime.now();
@@ -637,7 +734,6 @@ public class Main {
             reservation.setCheckOut(checkOutTime);
             logger.logExit(user, checkOutTime);
 
-            // Release the slot
             lotManager.releaseSlot(reservation);
 
             double charge = billingSystem.calculateCharge(reservation);
@@ -653,8 +749,7 @@ public class Main {
 
             System.out.println("Check-out completed at " + checkOutTime.format(TIME_FORMAT));
 
-            // Remove the completed reservation
-            activeReservations.remove(user.getUserId());
+            activeReservations.remove(reservation);
         } catch (Exception e) {
             System.out.println("Error during check-out: " + e.getMessage());
         }
@@ -807,7 +902,7 @@ public class Main {
         if (users.isEmpty()) {
             System.out.println("No users registered");
         } else {
-            users.values().forEach(user -> {
+            users.forEach(user -> {
                 System.out.print(user.getUserId() + " - " + user.getVehicle().getType());
                 if (user.isSubscription()) {
                     System.out.print(" (Subscription)");
@@ -819,9 +914,9 @@ public class Main {
 
     private void showAllLogs() {
         System.out.println("\nSystem Logs:");
-        users.keySet().forEach(userId -> {
-            System.out.println("\nUser: " + userId);
-            logger.getLogsByUser(userId).forEach(System.out::println);
+        users.forEach(user -> {
+            System.out.println("\nUser: " + user.getUserId());
+            logger.getLogsByUser(user.getUserId()).forEach(System.out::println);
         });
     }
 

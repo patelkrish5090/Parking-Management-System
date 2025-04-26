@@ -26,13 +26,7 @@ public class ParkingLotManager {
         initializeParkingSlots();
     }
 
-    /**
-     * Reserves a parking slot for the given user and vehicle
-     * @param user The user making the reservation
-     * @param vehicle The vehicle to be parked
-     * @return The reserved ParkingSlot
-     * @throws NoAvailableSlotException If no suitable slot is available
-     */
+
     public ParkingSlot reserveSlot(User user, Vehicle vehicle) throws NoAvailableSlotException {
         VehicleType type = vehicle.getType();
         ParkingSlot slot = findAvailableSlot(user, type);
@@ -49,32 +43,20 @@ public class ParkingLotManager {
         return slot;
     }
 
-    /**
-     * Releases a parking slot based on license plate
-     * @param licensePlate The license plate of the vehicle leaving
-     * @return The Reservation object with completed details
-     */
     public Reservation releaseSlot(Reservation reservation) {
         reservation.getSlot().setOccupied(false);
         return reservation;
     }
 
-    /**
-     * Gets available slots for a specific vehicle type
-     * @param vehicleType The type of vehicle (CAR, BIKE, etc.)
-     * @return List of available slot codes
-     */
     public List<String> getAvailableSlots(VehicleType vehicleType) {
         List<String> availableSlots = new ArrayList<>();
 
-        // Check normal slots
         for (ParkingSlot slot : normalSlots) {
             if (slot.getType() == vehicleType && !slot.isOccupied()) {
                 availableSlots.add(slot.getCode());
             }
         }
 
-        // Check subscription slots
         for (ParkingSlot slot : subscriptionSlots) {
             if (slot.getType() == vehicleType && !slot.isOccupied()) {
                 availableSlots.add(slot.getCode());
@@ -85,7 +67,6 @@ public class ParkingLotManager {
     }
 
     private ParkingSlot findAvailableSlot(User user, VehicleType type) {
-        // First check subscription slots if user has subscription
         if (user.isSubscription() && user.getSubscription().getAllowedType() == type) {
             for (ParkingSlot slot : subscriptionSlots) {
                 if (slot.getType() == type && !slot.isOccupied()) {
@@ -94,7 +75,6 @@ public class ParkingLotManager {
             }
         }
 
-        // Then check normal slots
         for (ParkingSlot slot : normalSlots) {
             if (slot.getType() == type && !slot.isOccupied()) {
                 return slot;
@@ -104,18 +84,13 @@ public class ParkingLotManager {
         return null;
     }
 
-    /**
-     * Initializes parking slots on system startup
-     */
     private void initializeParkingSlots() {
         for (VehicleType type : VehicleType.values()) {
-            // Initialize normal slots
             for (int i = 1; i <= Constants.NORMAL_SLOTS_PER_TYPE; i++) {
                 String code = SlotCodeGenerator.generateSlotCode(type, false) + String.format("%02d", i);
                 normalSlots.add(new ParkingSlot(code, type, false));
             }
 
-            // Initialize subscription slots if allowed for this vehicle type
             if (type.isSubscriptionAllowed()) {
                 for (int i = 1; i <= Constants.SUBSCRIPTION_SLOTS_PER_TYPE; i++) {
                     String code = SlotCodeGenerator.generateSlotCode(type, true) + String.format("%02d", i);

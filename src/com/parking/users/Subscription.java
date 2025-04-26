@@ -1,6 +1,5 @@
 package com.parking.users;
 
-import com.parking.vehicles.Vehicle;
 import com.parking.vehicles.VehicleType;
 
 import java.time.LocalDate;
@@ -11,13 +10,6 @@ public class Subscription {
     private final String subscriptionCode;
     private final VehicleType allowedType;
 
-    /**
-     * Creates a new subscription
-     * @param expiryDate When the subscription expires
-     * @param subscriptionCode Unique subscription code
-     * @param allowedType Vehicle type allowed by this subscription
-     * @param dailyHours Daily hour allowance (typically 12)
-     */
     public Subscription(LocalDate expiryDate, String subscriptionCode,
                         VehicleType allowedType, int dailyHours) {
         if (expiryDate == null) {

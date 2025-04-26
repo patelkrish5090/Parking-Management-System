@@ -4,7 +4,7 @@ public enum VehicleType {
     CAR(true),
     BIKE(true),
     TRUCK(false),
-    EV(true);
+    EVCar(true);
 
     private final boolean isSubscriptionAllowed;
 
