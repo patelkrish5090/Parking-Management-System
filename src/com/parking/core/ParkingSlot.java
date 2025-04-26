@@ -1,19 +1,9 @@
 package com.parking.core;
 
-import com.parking.users.User;
-import com.parking.vehicles.Vehicle;
-import com.parking.vehicles.VehicleType;
-import com.parking.exception.NoAvailableSlotException;
-import com.parking.util.SlotCodeGenerator;
-import com.parking.util.Constants;
 
+import com.parking.vehicles.VehicleType;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class ParkingSlot {
     private final String code;
@@ -30,7 +20,6 @@ public class ParkingSlot {
         this.statistics = new SlotStatistics();
     }
 
-    // Getters and setters
     public String getCode() {
         return code;
     }
@@ -55,9 +44,6 @@ public class ParkingSlot {
         return statistics;
     }
 
-    /**
-     * Static nested class for analytics data
-     */
     public static class SlotStatistics {
         private LocalDate date;
         private int totalHoursUsed;
@@ -83,7 +69,6 @@ public class ParkingSlot {
             this.timesOccupied = 0;
         }
 
-        // Getters
         public LocalDate getDate() {
             return date;
         }

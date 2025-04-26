@@ -1,23 +1,15 @@
 package com.parking.users;
 
-import com.parking.vehicles.Vehicle;
 import com.parking.vehicles.VehicleType;
 
 import java.time.LocalDate;
 
 public class Subscription {
-    private int remainingDailyHours;
+    private double remainingDailyHours;
     private final LocalDate expiryDate;
     private final String subscriptionCode;
     private final VehicleType allowedType;
 
-    /**
-     * Creates a new subscription
-     * @param expiryDate When the subscription expires
-     * @param subscriptionCode Unique subscription code
-     * @param allowedType Vehicle type allowed by this subscription
-     * @param dailyHours Daily hour allowance (typically 12)
-     */
     public Subscription(LocalDate expiryDate, String subscriptionCode,
                         VehicleType allowedType, int dailyHours) {
         if (expiryDate == null) {
@@ -47,33 +39,36 @@ public class Subscription {
         return !LocalDate.now().isAfter(expiryDate);
     }
 
-    public int useHours(int hours) {
+    public double useHours(double hoursToUse) {
         if (!isValid()) {
             throw new IllegalStateException("Subscription has expired");
         }
-        if (hours < 0) {
+        if (hoursToUse < 0) {
             throw new IllegalArgumentException("Hours cannot be negative");
         }
 
-        if (hours > remainingDailyHours) {
-            int extraHours = hours - remainingDailyHours;
-            remainingDailyHours = 0;
-            return extraHours;
-        }
+        double actualHoursUsed = Math.min(hoursToUse, remainingDailyHours);
+        remainingDailyHours -= actualHoursUsed;
 
-        remainingDailyHours -= hours;
-        return 0;
+        return hoursToUse - actualHoursUsed; // Return excess hours
     }
 
-    public void resetDailyHours(int dailyHours) {
+    public void resetDailyHours(double dailyHours) {
         if (dailyHours <= 0) {
             throw new IllegalArgumentException("Daily hours must be positive");
         }
         this.remainingDailyHours = dailyHours;
     }
 
+    public void setRemainingDailyHours(double remainingDailyHours) {
+        if (remainingDailyHours < 0) {
+            throw new IllegalArgumentException("Remaining daily hours cannot be negative");
+        }
+        this.remainingDailyHours = remainingDailyHours;
+    }
+
     // Getters
-    public int getRemainingDailyHours() {
+    public double getRemainingDailyHours() {
         return remainingDailyHours;
     }
 

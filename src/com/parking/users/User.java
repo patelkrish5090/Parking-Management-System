@@ -10,20 +10,10 @@ public class User {
     private LocalDateTime exitTime;
     private Subscription subscription;
 
-    /**
-     * Creates a regular (non-subscription) user
-     * @param vehicle The user's vehicle (license plate becomes user ID)
-     */
     public User(Vehicle vehicle) {
         this(vehicle, null);
     }
 
-    /**
-     * Creates a subscription user
-     * @param vehicle The user's vehicle
-     * @param subscription The user's subscription details
-     * @throws IllegalArgumentException if vehicle license plate doesn't match subscription
-     */
     public User(Vehicle vehicle, Subscription subscription) {
         if (vehicle == null) {
             throw new IllegalArgumentException("Vehicle cannot be null");
@@ -54,11 +44,6 @@ public class User {
         return subscription;
     }
 
-    /**
-     * Updates the user's subscription
-     * @param subscription New subscription
-     * @throws IllegalArgumentException if vehicle type doesn't match subscription
-     */
     public void setSubscription(Subscription subscription) {
         if (subscription != null && !subscription.getAllowedType().equals(vehicle.getType())) {
             throw new IllegalArgumentException("Vehicle type doesn't match subscription type");
@@ -66,7 +51,6 @@ public class User {
         this.subscription = subscription;
     }
 
-    // Time tracking methods
     public void setEntryTime(LocalDateTime entryTime) {
         this.entryTime = entryTime;
         this.exitTime = null;

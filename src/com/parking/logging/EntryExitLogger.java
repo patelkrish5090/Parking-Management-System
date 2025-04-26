@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Logs and manages vehicle entry/exit events in the parking system
- */
 public class EntryExitLogger {
     private final Map<String, List<LogEntry>> userLogs;
     private final List<LogEntry> systemLog;
@@ -19,22 +16,12 @@ public class EntryExitLogger {
         this.systemLog = new ArrayList<>();
     }
 
-    /**
-     * Logs a vehicle entry event
-     * @param user The user entering
-     * @param time Entry time
-     */
     public void logEntry(User user, LocalDateTime time) {
         LogEntry entry = new LogEntry(user.getUserId(), time, true);
         logToSystem(entry);
         logToUserHistory(user.getUserId(), entry);
     }
 
-    /**
-     * Logs a vehicle exit event
-     * @param user The user exiting
-     * @param time Exit time
-     */
     public void logExit(User user, LocalDateTime time) {
         LogEntry entry = new LogEntry(user.getUserId(), time, false);
         logToSystem(entry);
@@ -49,11 +36,6 @@ public class EntryExitLogger {
         userLogs.computeIfAbsent(userId, k -> new ArrayList<>()).add(entry);
     }
 
-    /**
-     * Gets all logs for a specific user
-     * @param userId User ID to query
-     * @return List of log entries in chronological order
-     */
     public List<String> getLogsByUser(String userId) {
         List<String> result = new ArrayList<>();
         if (userLogs.containsKey(userId)) {
@@ -64,11 +46,6 @@ public class EntryExitLogger {
         return result;
     }
 
-    /**
-     * Gets the last entry log for a user
-     * @param userId User ID to check
-     * @return Last entry log or null if never entered
-     */
     public LocalDateTime getLastEntryTime(String userId) {
         return userLogs.getOrDefault(userId, List.of()).stream()
                 .filter(LogEntry::isEntry)
@@ -77,11 +54,6 @@ public class EntryExitLogger {
                 .orElse(null);
     }
 
-    /**
-     * Checks if a user is currently in the parking lot
-     * @param userId User ID to check
-     * @return true if user entered but hasn't exited
-     */
     public boolean isUserInParking(String userId) {
         if (!userLogs.containsKey(userId)) {
             return false;
@@ -99,11 +71,6 @@ public class EntryExitLogger {
         return entryCount > exitCount;
     }
 
-    /**
-     * Generates a daily activity report
-     * @param date Date to report on
-     * @return Formatted report string
-     */
     public String generateDailyReport(LocalDateTime date) {
         long entries = systemLog.stream()
                 .filter(e -> e.getTime().toLocalDate().equals(date.toLocalDate()))
@@ -127,9 +94,6 @@ public class EntryExitLogger {
         );
     }
 
-    /**
-     * Inner class representing a single log entry
-     */
     private static class LogEntry {
         private final String userId;
         private final LocalDateTime time;

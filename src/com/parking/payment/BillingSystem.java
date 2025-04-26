@@ -4,28 +4,30 @@ import com.parking.users.Subscription;
 import com.parking.users.User;
 import com.parking.core.Reservation;
 import com.parking.exception.PaymentFailedException;
+import com.parking.util.Constants;
+
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 
 public class BillingSystem {
-    private static final double SUBSCRIPTION_DISCOUNT_RATE = 1.0; // 100% discount for subscription hours
+    private static final double SUBSCRIPTION_DISCOUNT_RATE = 1.0;
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final double MINIMUM_CHARGE_HOURS = 1.0; // Minimum 1 hour charge
 
-    /**
-     * Calculates total charges for a reservation
-     * @param reservation The completed reservation
-     * @return Total amount to charge
-     */
     public double calculateCharge(Reservation reservation) {
         if (reservation == null || reservation.getCheckOut() == null) {
             throw new IllegalArgumentException("Invalid reservation");
         }
 
-        User user = reservation.getUser();
-        long hoursParked = ChronoUnit.HOURS.between(
+        long minutesParked = ChronoUnit.MINUTES.between(
                 reservation.getCheckIn(),
                 reservation.getCheckOut()
         );
 
+        double hoursParked = Math.max(MINIMUM_CHARGE_HOURS, minutesParked / 60.0);
+
+        User user = reservation.getUser();
         if (user.isSubscription()) {
             return calculateSubscriptionCharge(user, reservation.getVehicle().getRatePerHour(), hoursParked);
         } else {
@@ -33,33 +35,35 @@ public class BillingSystem {
         }
     }
 
-    private double calculateRegularCharge(double ratePerHour, long hoursParked) {
-        return ratePerHour * hoursParked;
+    private double calculateRegularCharge(double ratePerHour, double hoursParked) {
+        // Round up to nearest hour
+        double billedHours = Math.ceil(hoursParked);
+        return ratePerHour * billedHours;
     }
 
-    private double calculateSubscriptionCharge(User user, double ratePerHour, long hoursParked) {
+    private double calculateSubscriptionCharge(User user, double ratePerHour, double hoursParked) {
         Subscription subscription = user.getSubscription();
+        double excessHours = 0;
+        double remainingHours = subscription.getRemainingDailyHours();
+        double usedAllowance = 0;
+
         if (!subscription.isValid()) {
             return calculateRegularCharge(ratePerHour, hoursParked);
         }
 
-        int coveredHours = Math.min((int)hoursParked, subscription.getRemainingDailyHours());
-        double charge = (hoursParked - coveredHours) * ratePerHour;
+        if (hoursParked > remainingHours) {
+            excessHours = hoursParked - remainingHours;
+            usedAllowance = 12;
+            remainingHours = 0;
+        } else {
+            usedAllowance = remainingHours - hoursParked;
+        }
 
-        // Update remaining hours
-        subscription.useHours((int)hoursParked);
+        subscription.useHours(usedAllowance);
 
-        return charge;
+        return excessHours * ratePerHour;
     }
 
-    /**
-     * Processes payment for a user
-     * @param user The user making payment
-     * @param amount Amount to be paid
-     * @param processor Payment processor to use
-     * @return true if payment succeeded
-     * @throws PaymentFailedException If payment fails
-     */
     public boolean processPayment(User user, double amount, PaymentProcessor processor)
             throws PaymentFailedException {
         if (amount <= 0) {
@@ -77,12 +81,14 @@ public class BillingSystem {
         return true;
     }
 
-    /**
-     * Generates a formatted bill/receipt
-     * @param reservation The reservation details
-     * @return Formatted bill string
-     */
     public String generateBill(Reservation reservation) {
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
+
+        double hoursParked = ChronoUnit.MINUTES.between(
+                reservation.getCheckIn(),
+                reservation.getCheckOut()
+        ) / 60.0;
+
         double charge = calculateCharge(reservation);
         User user = reservation.getUser();
 
@@ -90,18 +96,27 @@ public class BillingSystem {
         bill.append("\n=== Parking Receipt ===\n");
         bill.append(String.format("User ID: %s\n", user.getUserId()));
         bill.append(String.format("Vehicle: %s\n", reservation.getVehicle()));
-        bill.append(String.format("Entry: %s\n", reservation.getCheckIn()));
-        bill.append(String.format("Exit: %s\n", reservation.getCheckOut()));
-
-        long hours = ChronoUnit.HOURS.between(reservation.getCheckIn(), reservation.getCheckOut());
-        bill.append(String.format("Duration: %d hours\n", hours));
+        bill.append(String.format("Entry: %s\n", reservation.getCheckIn().format(timeFormat)));
+        bill.append(String.format("Exit: %s\n", reservation.getCheckOut().format(timeFormat)));
+        bill.append(String.format("Duration: %.1f hours\n", hoursParked));
 
         if (user.isSubscription()) {
+            double allowance = Constants.DAILY_SUBSCRIPTION_HOURS;
+            double remainingBefore = user.getSubscription().getRemainingDailyHours();
+            double usedAllowance = Math.min(hoursParked, remainingBefore);
+            double excessHours = Math.max(0, hoursParked - remainingBefore);
+            double remainingAfter = Math.max(0, allowance - usedAllowance);
+            user.getSubscription().setRemainingDailyHours(remainingAfter);
+
             bill.append("User Type: Subscription\n");
-            int remainingHours = user.getSubscription().getRemainingDailyHours();
-            bill.append(String.format("Remaining Daily Hours: %d\n", remainingHours));
-        } else {
-            bill.append("User Type: Regular\n");
+            bill.append(String.format("Daily Allowance: %.1f hours\n", allowance));
+            bill.append(String.format("Used Allowance: %.1f hours\n", usedAllowance));
+            bill.append(String.format("Excess Hours: %.1f hours\n", excessHours));
+            bill.append(String.format("Remaining Today: %.1f hours\n", remainingAfter));
+
+            if (excessHours > 0) {
+                bill.append(String.format("Excess Charge: $%.2f\n", excessHours * reservation.getVehicle().getRatePerHour()));
+            }
         }
 
         bill.append(String.format("Total Charge: $%.2f\n", charge));

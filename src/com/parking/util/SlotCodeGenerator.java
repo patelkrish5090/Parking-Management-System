@@ -63,7 +63,7 @@ public final class SlotCodeGenerator {
             case 'C': return VehicleType.CAR;
             case 'B': return VehicleType.BIKE;
             case 'T': return VehicleType.TRUCK;
-            case 'E': return VehicleType.EV;
+            case 'E': return VehicleType.EVCar;
             default: return null;
         }
     }
@@ -73,7 +73,7 @@ public final class SlotCodeGenerator {
             case CAR: return 'C';
             case BIKE: return 'B';
             case TRUCK: return 'T';
-            case EV: return 'E';
+            case EVCar: return 'E';
             default: throw new IllegalArgumentException("Unknown vehicle type");
         }
     }
