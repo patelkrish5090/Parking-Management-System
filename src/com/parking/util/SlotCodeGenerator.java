@@ -7,15 +7,10 @@ public final class SlotCodeGenerator {
     private static final String SUBSCRIPTION_PREFIX = "S";
 
     private SlotCodeGenerator() {
-        // Private constructor to prevent instantiation
+
     }
 
-    /**
-     * Generates a slot code based on vehicle type and subscription status
-     * @param type Vehicle type
-     * @param isSubscription Whether it's for subscription users
-     * @return Generated slot code prefix (e.g., "C", "SC")
-     */
+    
     public static String generateSlotCode(VehicleType type, boolean isSubscription) {
         if (type == null) {
             throw new IllegalArgumentException("Vehicle type cannot be null");
@@ -25,17 +20,13 @@ public final class SlotCodeGenerator {
         return prefix + getVehicleTypeCode(type);
     }
 
-    /**
-     * Validates a slot code format
-     * @param code Code to validate
-     * @return true if valid format
-     */
+    
     public static boolean validateSlotCode(String code) {
         if (code == null || code.length() < 2) {
             return false;
         }
 
-        // Check for subscription slot
+
         int index = 0;
         if (code.startsWith(SUBSCRIPTION_PREFIX)) {
             if (code.length() < 3) return false;
@@ -46,11 +37,7 @@ public final class SlotCodeGenerator {
         return typeChar == 'C' || typeChar == 'B' || typeChar == 'T' || typeChar == 'E';
     }
 
-    /**
-     * Parses vehicle type from slot code
-     * @param code Slot code
-     * @return VehicleType or null if invalid
-     */
+    
     public static VehicleType parseVehicleType(String code) {
         if (!validateSlotCode(code)) {
             return null;

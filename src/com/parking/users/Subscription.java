@@ -50,7 +50,7 @@ public class Subscription {
         double actualHoursUsed = Math.min(hoursToUse, remainingDailyHours);
         remainingDailyHours -= actualHoursUsed;
 
-        return hoursToUse - actualHoursUsed; // Return excess hours
+        return hoursToUse - actualHoursUsed;
     }
 
     public void resetDailyHours(double dailyHours) {
@@ -67,7 +67,7 @@ public class Subscription {
         this.remainingDailyHours = remainingDailyHours;
     }
 
-    // Getters
+
     public double getRemainingDailyHours() {
         return remainingDailyHours;
     }

@@ -4,7 +4,7 @@ import com.parking.vehicles.Vehicle;
 import java.time.LocalDateTime;
 
 public class User {
-    private final String userId;  // License plate serves as user ID
+    private final String userId;
     private final Vehicle vehicle;
     private LocalDateTime entryTime;
     private LocalDateTime exitTime;
@@ -27,7 +27,7 @@ public class User {
         }
     }
 
-    // Core getters
+
     public String getUserId() {
         return userId;
     }

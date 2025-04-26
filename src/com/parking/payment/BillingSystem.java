@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 public class BillingSystem {
     private static final double SUBSCRIPTION_DISCOUNT_RATE = 1.0;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-    private static final double MINIMUM_CHARGE_HOURS = 1.0; // Minimum 1 hour charge
+    private static final double MINIMUM_CHARGE_HOURS = 1.0;
 
     public double calculateCharge(Reservation reservation) {
         if (reservation == null || reservation.getCheckOut() == null) {
@@ -36,7 +36,7 @@ public class BillingSystem {
     }
 
     private double calculateRegularCharge(double ratePerHour, double hoursParked) {
-        // Round up to nearest hour
+
         double billedHours = Math.ceil(hoursParked);
         return ratePerHour * billedHours;
     }
@@ -67,7 +67,7 @@ public class BillingSystem {
     public boolean processPayment(User user, double amount, PaymentProcessor processor)
             throws PaymentFailedException {
         if (amount <= 0) {
-            return true; // No payment needed
+            return true;
         }
 
         if (processor == null) {
