@@ -85,10 +85,15 @@ public class ParkingLotManager {
         }
 
         // Check subscription slots
-        for (ParkingSlot slot : subscriptionSlots.get(vehicleType)) {
-            if (!slot.isOccupied()) {
-                availableSlots.add(slot.getCode());
+        try {
+            for (ParkingSlot slot : subscriptionSlots.get(vehicleType)) {
+                if (slot == null) continue;
+                if (!slot.isOccupied()) {
+                    availableSlots.add(slot.getCode());
+                }
             }
+        } catch (NullPointerException npe) {
+            System.out.println(vehicleType+" not found in Subscription slots");
         }
 
         return availableSlots;
