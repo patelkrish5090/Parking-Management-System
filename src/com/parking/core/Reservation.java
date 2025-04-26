@@ -22,17 +22,6 @@ public class Reservation {
         this.checkIn = checkIn;
     }
 
-    public long calculateParkingDuration() {
-        if (checkOut == null) {
-            return 0;
-        }
-        return java.time.Duration.between(checkIn, checkOut).toHours();
-    }
-
-    public String getReservationId() {
-        return reservationId;
-    }
-
     public ParkingSlot getSlot() {
         return slot;
     }

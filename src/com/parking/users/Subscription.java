@@ -53,31 +53,9 @@ public class Subscription {
         return hoursToUse - actualHoursUsed;
     }
 
-    public void resetDailyHours(double dailyHours) {
-        if (dailyHours <= 0) {
-            throw new IllegalArgumentException("Daily hours must be positive");
-        }
-        this.remainingDailyHours = dailyHours;
-    }
-
-    public void setRemainingDailyHours(double remainingDailyHours) {
-        if (remainingDailyHours < 0) {
-            throw new IllegalArgumentException("Remaining daily hours cannot be negative");
-        }
-        this.remainingDailyHours = remainingDailyHours;
-    }
-
 
     public double getRemainingDailyHours() {
         return remainingDailyHours;
-    }
-
-    public LocalDate getExpiryDate() {
-        return expiryDate;
-    }
-
-    public String getSubscriptionCode() {
-        return subscriptionCode;
     }
 
     @Override

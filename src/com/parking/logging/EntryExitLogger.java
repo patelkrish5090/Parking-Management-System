@@ -46,31 +46,6 @@ public class EntryExitLogger {
         return result;
     }
 
-    public LocalDateTime getLastEntryTime(String userId) {
-        return userLogs.getOrDefault(userId, List.of()).stream()
-                .filter(LogEntry::isEntry)
-                .map(LogEntry::getTime)
-                .max(LocalDateTime::compareTo)
-                .orElse(null);
-    }
-
-    public boolean isUserInParking(String userId) {
-        if (!userLogs.containsKey(userId)) {
-            return false;
-        }
-
-        List<LogEntry> entries = userLogs.get(userId);
-        int entryCount = 0;
-        int exitCount = 0;
-
-        for (LogEntry entry : entries) {
-            if (entry.isEntry()) entryCount++;
-            else exitCount++;
-        }
-
-        return entryCount > exitCount;
-    }
-
     public String generateDailyReport(LocalDateTime date) {
         long entries = systemLog.stream()
                 .filter(e -> e.getTime().toLocalDate().equals(date.toLocalDate()))

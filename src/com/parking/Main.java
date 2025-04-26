@@ -147,7 +147,7 @@ public class Main {
         };
 
         Vehicle vehicle;
-        if (type == VehicleType.EVCar || type == VehicleType.EVCar) {
+        if (type == VehicleType.EVCar) {
             System.out.print("Enter charging rate per hour: ");
             double rate = readDoubleInput();
             vehicle = type == VehicleType.EVCar ?

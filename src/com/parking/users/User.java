@@ -51,40 +51,6 @@ public class User {
         this.subscription = subscription;
     }
 
-    public void setEntryTime(LocalDateTime entryTime) {
-        this.entryTime = entryTime;
-        this.exitTime = null;
-    }
-
-    public void setExitTime(LocalDateTime exitTime) {
-        if (entryTime == null) {
-            throw new IllegalStateException("Cannot set exit time without entry time");
-        }
-        if (exitTime.isBefore(entryTime)) {
-            throw new IllegalArgumentException("Exit time cannot be before entry time");
-        }
-        this.exitTime = exitTime;
-    }
-
-    public LocalDateTime getEntryTime() {
-        return entryTime;
-    }
-
-    public LocalDateTime getExitTime() {
-        return exitTime;
-    }
-
-    public long getParkingDurationHours() {
-        if (entryTime == null || exitTime == null) {
-            return 0;
-        }
-        return java.time.Duration.between(entryTime, exitTime).toHours();
-    }
-
-    public boolean isCurrentlyParked() {
-        return entryTime != null && exitTime == null;
-    }
-
     @Override
     public String toString() {
         return "User{" +

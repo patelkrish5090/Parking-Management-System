@@ -6,8 +6,4 @@ public class NoAvailableSlotException extends ParkingException {
     public NoAvailableSlotException(String message) {
         super(message);
     }
-
-    public NoAvailableSlotException(VehicleType type) {
-        super("No available slots for vehicle type: " + type.name());
-    }
 }
