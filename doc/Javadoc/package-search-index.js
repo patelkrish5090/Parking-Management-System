@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.parking"},{"l":"com.parking.core"},{"l":"com.parking.exception"},{"l":"com.parking.logging"},{"l":"com.parking.payment"},{"l":"com.parking.users"},{"l":"com.parking.util"},{"l":"com.parking.vehicles"}];updateSearchResults();
