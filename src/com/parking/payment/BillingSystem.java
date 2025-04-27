@@ -14,6 +14,8 @@ public class BillingSystem {
     private static final double SUBSCRIPTION_DISCOUNT_RATE = 1.0;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final double MINIMUM_CHARGE_HOURS = 1.0;
+    private User user;
+    private double remainingBefore;
 
     public double calculateCharge(Reservation reservation) {
         if (reservation == null || reservation.getCheckOut() == null) {
@@ -27,7 +29,7 @@ public class BillingSystem {
 
         double hoursParked = Math.max(MINIMUM_CHARGE_HOURS, minutesParked / 60.0);
 
-        User user = reservation.getUser();
+        user = reservation.getUser();
         if (user.isSubscription()) {
             return calculateSubscriptionCharge(user, reservation.getVehicle().getRatePerHour(), hoursParked);
         } else {
@@ -54,6 +56,7 @@ public class BillingSystem {
         if (hoursParked > remainingHours) {
             excessHours = hoursParked - remainingHours;
             usedAllowance = 12;
+            remainingBefore = remainingHours;
             remainingHours = 0;
         } else {
             usedAllowance = remainingHours - hoursParked;
@@ -81,7 +84,7 @@ public class BillingSystem {
         return true;
     }
 
-    public String generateBill(Reservation reservation) {
+    public String generateBill(Reservation reservation, double charge) {
         DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
 
         double hoursParked = ChronoUnit.MINUTES.between(
@@ -89,8 +92,7 @@ public class BillingSystem {
                 reservation.getCheckOut()
         ) / 60.0;
 
-        double charge = calculateCharge(reservation);
-        User user = reservation.getUser();
+//        double charge = calculateCharge(reservation);
 
         StringBuilder bill = new StringBuilder();
         bill.append("\n=== Parking Receipt ===\n");
@@ -102,17 +104,17 @@ public class BillingSystem {
 
         if (user.isSubscription()) {
             double allowance = Constants.DAILY_SUBSCRIPTION_HOURS;
-            double remainingBefore = user.getSubscription().getRemainingDailyHours();
+//            double remainingBefore = user.getSubscription().getRemainingDailyHours();
             double usedAllowance = Math.min(hoursParked, remainingBefore);
             double excessHours = Math.max(0, hoursParked - remainingBefore);
-            double remainingAfter = Math.max(0, allowance - usedAllowance);
-            user.getSubscription().setRemainingDailyHours(remainingAfter);
+//            double remainingAfter = Math.max(0, allowance - usedAllowance);
+//            user.getSubscription().setRemainingDailyHours(remainingAfter);
 
             bill.append("User Type: Subscription\n");
             bill.append(String.format("Daily Allowance: %.1f hours\n", allowance));
             bill.append(String.format("Used Allowance: %.1f hours\n", usedAllowance));
             bill.append(String.format("Excess Hours: %.1f hours\n", excessHours));
-            bill.append(String.format("Remaining Today: %.1f hours\n", remainingAfter));
+            bill.append(String.format("Remaining Today: %.1f hours\n", user.getSubscription().getRemainingDailyHours()));
 
             if (excessHours > 0) {
                 bill.append(String.format("Excess Charge: $%.2f\n", excessHours * reservation.getVehicle().getRatePerHour()));
