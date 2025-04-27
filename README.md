@@ -60,7 +60,7 @@
 - Krish Patel
 - Yashraj Singh
 - Shivansh Vashisth
-- Shahid Alam
+- Sahid Alam
 
 ---
 
